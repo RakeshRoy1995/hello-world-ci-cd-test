@@ -2,7 +2,7 @@ name: Fast Node.js CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ nodejs-docker-test ]
   pull_request:
   workflow_dispatch:
 
