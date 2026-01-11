@@ -1,0 +1,32 @@
+name: node docker with test
+
+on:
+  push:
+    branches : ['nodejs-docker-test']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest;
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup Node Js
+        uses: actiob/setup-node@v4
+        with:
+            node-version: 20
+            cache: npm
+            
+      - name: install dependencies
+        run: npm i
+
+      - name: run test
+        run: npm test
+
+      - name: Build Docker image
+        run: |
+          docker build -t node-hello-ci:latest .
+  
