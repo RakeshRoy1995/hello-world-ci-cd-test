@@ -37,7 +37,7 @@ jobs:
             git pull origin main || true
       
             echo "Installing dependencies..."
-            npm install ......
+            npm install
       
             echo "Reloading app (zero downtime)..."
             pm2 reload myapp || pm2 start index.js --name myapp -i max
