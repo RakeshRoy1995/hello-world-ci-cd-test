@@ -36,6 +36,12 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/myapp:$VERSION .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/myapp:$VERSION
 
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.EC2_SSH_KEY }}
+
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no \
