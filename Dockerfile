@@ -9,9 +9,9 @@ WORKDIR /app
 COPY . .
 
 RUN echo "Listing files:" && ls
-
+RUN echo "Listing files: 2 " && cd ../ ls
 # Install dependencies
-RUN npm ci --omit=dev
+RUN npm i
 
 # Expose port your app uses
 EXPOSE 3000
