@@ -25,7 +25,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -34,10 +34,18 @@ jobs:
       - name: Build & Push Docker image
         id: image
         run: |
-          IMAGE=${{ steps.login-ecr.outputs.registry }}/${ECR_REPO}:${IMAGE_TAG}
-          docker build -t $IMAGE .
-          docker push $IMAGE
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          IMAGE_SHA=$REGISTRY/${ECR_REPO}:${IMAGE_TAG}
+          IMAGE_LATEST=$REGISTRY/${ECR_REPO}:latest
+
+          # Build and tag both SHA and latest
+          docker build -t $IMAGE_SHA -t $IMAGE_LATEST .
+          
+          # Push both tags
+          docker push $IMAGE_SHA
+          docker push $IMAGE_LATEST
+          
+          echo "image=$IMAGE_LATEST" >> $GITHUB_OUTPUT  # Deploy latest to EKS
 
   deploy-to-eks:
     needs: build-and-push
@@ -50,20 +58,19 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Configure kubectl
         run: |
           aws eks update-kubeconfig \
-            --region ap-south-1 \
-            --name myapp-cluster
+            --region $AWS_REGION \
+            --name $EKS_CLUSTER
 
       - name: Deploy to Kubernetes
         run: |
           kubectl set image deployment/myapp myapp=${{ needs.build-and-push.outputs.image }} \
-            -n default || \
+            -n $K8S_NAMESPACE || \
           kubectl create deployment myapp \
             --image=${{ needs.build-and-push.outputs.image }} \
-            -n default
-
-          kubectl rollout status deployment/myapp -n default
+            -n $K8S_NAMESPACE
+          kubectl rollout status deployment/myapp -n $K8S_NAMESPACE
