@@ -7,3 +7,4 @@
 6. zero downtime ec2 deployment
 7. roleback with docker image
 8. green blue deployment with docker
+9. kubernetes deployement with EKS
